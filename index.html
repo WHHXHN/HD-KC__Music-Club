@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>河大&科传音游交流网</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1', // 音游风格紫色主色调
+            secondary: '#ec4899', // 粉色强调色
+            accent: '#10b981', // 绿色点缀色
+            dark: '#1e1b4b', // 深色背景
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .text-shadow-lg {
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      .glow {
+        filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+      }
+	  
+	  .hide-scrollbar::-webkit-scrollbar {
+	      display: none;
+	    }
+	    .hide-scrollbar {
+	      -ms-overflow-style: none;
+	      scrollbar-width: none;
+	    }
+	  
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-10px) scale(1.03);
+      }
+      .neon-border {
+        position: relative;
+      }
+      .neon-border::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: inherit;
+        padding: 2px;
+        background: linear-gradient(45deg, #6366f1, #ec4899, #10b981);
+        -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .neon-border:hover::after {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white min-h-screen">
+  <!-- 导航栏 -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-dark/80 backdrop-blur-md border-b border-indigo-500/20">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="fa fa-music text-primary text-2xl animate-pulse"></i>
+        <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+          河大&科传音游交流网
+        </h1>
+      </div>
+      
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#about" class="hover:text-primary transition-colors duration-300">关于我们</a>
+        <a href="#games" class="hover:text-primary transition-colors duration-300">游戏类型</a>
+        <a href="#events" class="hover:text-primary transition-colors duration-300">活动日历</a>
+      </nav>
+      
+      <button class="md:hidden text-2xl" id="menu-toggle">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+    
+    <!-- 移动端菜单 -->
+    <div id="mobile-menu" class="hidden md:hidden bg-dark/95 backdrop-blur-md border-b border-indigo-500/20">
+      <div class="container mx-auto px-4 py-3 flex flex-col gap-4">
+        <a href="#about" class="py-2 hover:text-primary transition-colors duration-300">关于我们</a>
+        <a href="#games" class="py-2 hover:text-primary transition-colors duration-300">游戏类型</a>
+        <a href="#events" class="py-2 hover:text-primary transition-colors duration-300">活动日历</a>
+
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 pt-24 pb-16">
+	  <!-- ============ 通用：游戏卡片点击放大模态框 ============ -->
+	  <div id="game-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4" onclick="closeModal()">
+	    <div class="relative max-w-4xl w-full" onclick="event.stopPropagation()">
+	      <!-- 关闭按钮 -->
+	      <button class="absolute -top-12 right-0 text-white hover:text-primary text-2xl transition-colors" onclick="closeModal()" aria-label="关闭">
+	        <i class="fa fa-times-circle"></i>
+	      </button>
+	      <!-- 大图 -->
+	      <img id="modal-img" src="" alt="游戏大图预览" class="w-full rounded-xl shadow-2xl max-h-[80vh] object-contain bg-slate-900">
+	      <!-- 底部提示 -->
+	      <p class="text-center text-white/60 text-sm mt-4">点击遮罩或按 ESC 关闭</p>
+	    </div>
+	  </div>
+	  
+	  <script>
+	    // 打开模态框
+	    function openModal(src) {
+	      const modal = document.getElementById('game-modal');
+	      document.getElementById('modal-img').src = src;
+	      modal.classList.remove('hidden');
+	      modal.classList.add('flex');
+	      document.body.style.overflow = 'hidden'; // 禁止背景滚动
+	    }
+	  
+	    // 关闭模态框
+	    function closeModal() {
+	      const modal = document.getElementById('game-modal');
+	      modal.classList.add('hidden');
+	      modal.classList.remove('flex');
+	      document.body.style.overflow = '';
+	    }
+	  
+	    // ESC 键关闭
+	    document.addEventListener('keydown', function (e) {
+	      if (e.key === 'Escape') closeModal();
+	    });
+	  
+	    // 事件委托：所有带 data-big-img 的卡片点击时自动放大
+	    document.querySelectorAll('[data-big-img]').forEach(function (card) {
+	      card.addEventListener('click', function () {
+	        openModal(card.getAttribute('data-big-img'));
+	      });
+	    });
+	  </script>
+
+    <!-- 英雄区 -->
+   <!-- 英雄区 -->
+   <section class="relative py-12 md:py-24 flex flex-col items-center text-center overflow-hidden">
+   
+     <!-- 图二背景层：紫蓝科幻星球图，铺满整个英雄区 -->
+     <div class="absolute inset-0 z-0">
+       <img src="HD-KC_Club/img/音游封面背景/音游组会.jpg"
+            alt="触角动漫社音游组背景"
+            class="w-full h-full object-cover">
+       <!-- 暗色遮罩：保证中间标题文字可读，同时让原图左侧文字淡化成装饰 -->
+       <div class="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/40 to-slate-900/80"></div>
+     </div>
+   
+     <!-- 原有内容，提到背景层之上 -->
+     <div class="relative z-10 flex flex-col items-center">
+       <h1 class="text-4xl md:text-6xl font-bold mb-6 text-shadow-lg">
+         <span class="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+           音游联合同好会
+         </span>
+       </h1>
+       <p class="text-lg md:text-xl text-indigo-100/90 max-w-2xl mb-10 leading-relaxed">
+         汇集河南大学与河南开封科技传媒学院的音游爱好者，共同打造属于我们的音游交流平台。
+       </p>
+       <div class="flex flex-wrap justify-center gap-4">
+         <a href="#events" class="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-lg transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40">
+           查看近期活动
+         </a>
+         <a href="#games" class="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-medium px-6 py-3 rounded-lg border border-white/20 transition-all duration-300">
+           浏览游戏类型
+         </a>
+       </div>
+     </div>
+   </section>
+
+
+    <!-- 关于我们 -->
+    <section id="about" class="py-12">
+      <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 shadow-xl">
+        <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+          <i class="fa fa-info-circle text-primary"></i>
+          关于我们
+        </h2>
+        <p class="text-indigo-100/80 mb-6 leading-relaxed">
+          2026年9月经触角动漫社管理层投票表决，触角动漫社音游类兴趣群已升级为音游兴趣组。由于线上线下音游都具备一定的社交属性，触角音游组旨在搭建一个让大家欢乐交流各类音游的平台。
+		  触角动漫社音游组目前已逾200+人，主要活跃音游较丰富，传统类音游来说，移动端诸如Arcaea，Phigros，Cytus II等，街机端容涵舞萌DX，中二节奏，Sound Voltex，太鼓之达人等，
+		  也有osu!，Malody等社区音游交流和DJMAX，冰与火之舞等PC端音游。新型社交卡牌音游而言也不乏世界计划（初音未来：缤纷舞台），BanG Dream!等音游
+		  河大&科传 音游组联合欢迎你！
+		  两所学校交流同好圈正式上线——跨校面基、友谊赛、手元录制等活动，这里全都有。
+		  两所学校，一份热爱，节拍不分彼此。
+        </p>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white/5 p-6 rounded-xl border border-white/10">
+            <h3 class="text-xl font-semibold mb-3 text-primary">河大音游组</h3>
+            <p class="text-indigo-100/70">
+              河南大学音游协会成立于2018年，目前有超过200名成员，涵盖了各类音游爱好者，定期举办线下聚会和线上比赛。
+            </p>
+          </div>
+          <div class="bg-white/5 p-6 rounded-xl border border-white/10">
+            <h3 class="text-xl font-semibold mb-3 text-secondary">科传音游组</h3>
+            <p class="text-indigo-100/70">
+              在节拍与音符之间，我们相遇。每一次滑动、每一次敲击，都是对旋律的回应。欢迎加入科传音游社，让节奏成为我们共同的语言。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 游戏类型 -->
+    <section id="games" class="py-12">
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold mb-3 flex items-center gap-3">
+          <i class="fa fa-gamepad text-primary"></i>
+          游戏类型
+        </h2>
+        <p class="text-indigo-100/70">
+          点击卡片查看游戏详细介绍
+        </p>
+      </div>
+      
+      <div  id="game-scroll" class="flex gap-4 md:gap-6 overflow-x-auto scroll-smooth pb-4 snap-x snap-mandatory hide-scrollbar">
+<!-- 舞萌DX -->
+<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+  <div class="aspect-[3/4] flex flex-col">
+    <div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+      <!-- 图一：默认小图标（舞萌小熊），作为卡片背景底图 -->
+      <img src="HD-KC_Club/img/音游封面背景/熊出没.png"
+           alt="舞萌DX"
+           class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+      <!-- 中间图标，悬停时放大 -->
+      <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+        <h3 class="text-lg md:text-xl font-bold text-white drop-shadow">舞萌DX</h3>
+      </div>
+
+      <!-- 图二：悬停时放大展示的大图（魔法少女主视觉） -->
+      <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+        <img src="HD-KC_Club/img/音游封面背景/maimai背景图.png"
+             alt="舞萌DX 主视觉"
+             class="w-full h-full object-cover">
+        <!-- 底部渐变遮罩，让文字可读 -->
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+          <p class="text-white text-sm font-semibold text-center">maimai 舞萌 DX</p>
+        </div>
+      </div>
+
+    </div>
+    <div class="p-3 text-center border-t border-white/10 bg-white/5">
+      <p class="font-medium">舞萌DX</p>
+    </div>
+  </div>
+</div>
+
+        
+        <!-- PJSK / Project SEKAI -->
+		<a href="https://pjsekai.sega.jp/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+          <div class="aspect-[3/4] flex flex-col">
+            <div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+        
+              <!-- 图一：默认小图标（初音6周年），作为卡片背景底图 -->
+			<img src='HD-KC_Club/img/音游封面背景/烤.webp'
+				alt="PJSK"
+				class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+        
+              <!-- 中间图标，悬停时放大 -->
+              <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+                <h3 class="text-lg md:text-xl font-bold text-white drop-shadow">PJSK</h3>
+              </div>
+        
+              <!-- 图二：悬停时放大展示的大图（Project SEKAI 主视觉） -->
+              <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+                <img src="HD-KC_Club/img/音游封面背景/miku.jpg"
+                     alt="Project SEKAI COLORFUL STAGE"
+                     class="w-full h-full object-cover">
+                <!-- 底部渐变遮罩，让文字可读 -->
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                  <p class="text-white text-sm font-semibold text-center">Project SEKAI 缤纷舞台 feat. 初音未来</p>
+                </div>
+              </div>
+        
+            </div>
+            <div class="p-3 text-center border-t border-white/10 bg-white/5">
+              <p class="font-medium">Project SEKAI</p>
+            </div>
+          </div>
+        </div>
+		</a>
+        
+		<!-- Phigros -->
+		<a href="https://www.phigrim.cn/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/phigros.webp"
+				   alt="Phigros"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">Phigros</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/phigros背景图.webp"
+					 alt="Phigros 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">Phigros</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">Phigros</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+	
+		<!-- 喵斯快跑 -->
+		<a href="https://musedash.peropero.net/#/version">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标（喵斯角色头像），作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img//音游封面背景/喵斯大头照.webp"
+				   alt="喵斯快跑"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">喵斯</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图（喵斯快跑主视觉） -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img//音游封面背景/喵斯背景图.webp"
+					 alt="喵斯快跑 主视觉"
+					 class="w-full h-full object-cover">
+				<!-- 底部渐变遮罩，让文字可读 -->
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">Muse Dash 喵斯快跑</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">喵斯快跑</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+		<!-- 冰与火之舞 -->
+		<a href="https://www.adofai.cc/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img//音游封面背景/冰与火.webp"
+				   alt="冰与火之舞"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">冰与火之舞</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/冰与火背景图.jpg"
+					 alt="冰与火之舞 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">冰与火之舞</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">冰与火之舞</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+
+		<!-- BanG Dream -->
+		<a href="https://en.bang-dream.com/music/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/邦邦.jpg"
+				   alt="BanG Dream"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">BanG Dream</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img//音游封面背景/邦邦背景图.jpg"
+					 alt="BanG Dream 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">BanG Dream</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">BanG Dream</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+		<!-- KALPA -->
+		<a href="https://queseragames.net/en/games/kalpa/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/KALPA.jpg"
+				   alt="KALPA"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">KALPA</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/Kalpa背景.jpg"
+					 alt="KALPA 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">KALPA</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">KALPA</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+		<!-- Arcaea -->
+		<a href="https://arcaea.lowiro.com/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/Arcaea.jpg"
+				   alt="Arcaea"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">Arcaea</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/Arcaea背景.jpg"
+					 alt="Arcaea 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">Arcaea</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">Arcaea</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+		<!--Malody  -->
+		<a href="https://m.mugzone.net/index" target="_blank" rel="noopener noreferrer">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/Malody.jpg"
+				   alt="Malody"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">Malody</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/Malody背景.jpg"
+					 alt="Malody 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">Malody</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">Malody</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+
+		<!--  旋转音律  -->
+		<a href="https://www.rotaeno.com/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/旋转音律.webp"
+				   alt="旋转音律"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">旋转音律</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/旋转音律背景.webp"
+					 alt="旋转音律 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">旋转音律</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">旋转音律</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+		<!-- 范式-起源 -->
+		<a href="https://paradigmchina.tunergames.com/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/范式-起源.webp"
+				   alt="范式-起源"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">范式-起源</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/范式—起源背景.webp"
+					 alt="范式-起源 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">范式-起源</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">范式-起源</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+		<!-- 调律诗篇 -->
+		<a href="https://lanota.gmzon.com/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/调律诗篇.webp"
+				   alt="调律诗篇"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">调律诗篇</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/调律诗篇背景.jpg"
+					 alt="调律诗篇 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">调律诗篇</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">调律诗篇</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+		<!-- 音乐世界赛特斯2 -->
+		<a href="https://cytus2.qq.com/">
+		<div class="game-card card-hover neon-border bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer group relative flex-shrink-0 w-36 md:w-44">
+
+		  <div class="aspect-[3/4] flex flex-col">
+			<div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+
+			  <!-- 图一：默认小图标，作为卡片背景底图 -->
+			  <img src="HD-KC_Club/img/音游封面背景/音乐世界赛特斯2.webp"
+				   alt="音乐世界赛特斯2"
+				   class="w-full h-full object-cover absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-300">
+
+			  <!-- 中间标题文字 -->
+			  <div class="relative z-10 text-center transition-transform duration-300 group-hover:scale-110">
+				<h3 class="text-lg md:text-xl font-bold text-white drop-shadow">音乐世界赛特斯2</h3>
+			  </div>
+
+			  <!-- 图二：悬停时放大展示的大图 -->
+			  <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none">
+				<img src="HD-KC_Club/img/音游封面背景/音乐世界赛特斯2背景.webp"
+					 alt="音乐世界赛特斯2 主视觉"
+					 class="w-full h-full object-cover">
+				<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+				  <p class="text-white text-sm font-semibold text-center">音乐世界赛特斯2</p>
+				</div>
+			  </div>
+
+			</div>
+			<div class="p-3 text-center border-t border-white/10 bg-white/5">
+			  <p class="font-medium">音乐世界赛特斯2</p>
+			</div>
+		  </div>
+		</div>
+		</a>
+		
+    </section>
+	
+
+    <!-- 活动日历 -->
+    <section id="events" class="py-12">
+      <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 shadow-xl">
+        <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+          <i class="fa fa-calendar text-primary"></i>
+          活动日历
+        </h2>
+        
+        <div class="space-y-6">
+          <div class="flex gap-4 p-4 bg-white/5 rounded-xl border-l-4 border-primary hover:bg-white
+		  <!-- 潮可爱杯活动条目 -->
+		  <div class="event-item flex gap-4 p-4 bg-white/5 rounded-xl border-l-4 border-primary hover:bg-white/10 transition-all duration-300 cursor-pointer"
+		       onclick="openEventModal()">
+		    <div class="flex flex-col items-center justify-center min-w-[60px] text-center">
+		      <span class="text-2xl font-bold text-primary">11.21-22</span>
+		      <span class="text-xs text-indigo-200/70">周六-周日</span>
+		    </div>
+		    <div class="flex-1">
+		      <h3 class="text-lg font-semibold text-white mb-1">开封星光天地·潮可爱杯</h3>
+		      <p class="text-sm text-indigo-100/80">舞萌DX线下友谊赛 · 开封高校音游联合赛点</p>
+		      <p class="text-xs text-indigo-200/60 mt-1">龙亭区黄河大街星光天地A馆2楼潮可爱电玩</p>
+		    </div>
+		    <div class="flex items-center text-primary text-sm font-medium">
+		      查看详情 <i class="fa fa-angle-right ml-1"></i>
+		    </div>
+		  </div>
+			<!-- ============ 活动详情模态框 ============ -->
+			<div id="event-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4 -translate-y-8" onclick="closeEventModal()">
+			  <div class="relative max-w-4xl w-full max-h-[85vh] bg-slate-900/95 rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+
+			    <!-- 关闭按钮 -->
+			    <button class="absolute top-4 right-4 text-white/70 hover:text-white text-xl transition-colors z-10" onclick="closeEventModal()" aria-label="关闭">
+			      <i class="fa fa-times"></i>
+			    </button>
+			
+			    <!-- 顶部标题区 -->
+			    <div class="bg-gradient-to-r from-primary/20 to-secondary/20 p-6 border-b border-white/10">
+			      <div class="flex items-center gap-3 mb-2">
+			        <i class="fa fa-trophy text-primary text-2xl"></i>
+			        <h2 class="text-2xl font-bold text-white">开封星光天地 · 潮可爱杯</h2>
+			      </div>
+			      <p class="text-indigo-200/80">舞萌DX线下友谊赛</p>
+			    </div>
+			
+			    <!-- 详情内容 -->
+			    <div class="p-8 space-y-6 text-indigo-100/90 overflow-y-auto">
+
+			      <div class="grid grid-cols-2 gap-4">
+			        <div>
+			          <p class="text-xs text-indigo-300/60 uppercase tracking-wider mb-1">活动时间</p>
+			          <p class="font-medium">2025年11月21日-22日</p>
+			          <p class="text-sm text-indigo-200/70">由10:00正式开始迟到15分钟以上自愿放弃比赛资格并取消奖励发放</p>
+			        </div>
+			        <div>
+			          <p class="text-xs text-indigo-300/60 uppercase tracking-wider mb-1">活动地点</p>
+			          <p class="font-medium">潮可爱电玩（星光天地店）</p>
+			          <p class="text-sm text-indigo-200/70">开封龙亭区黄河大街A馆2楼</p>
+			        </div>
+			      </div>
+			
+			      <div>
+			        <p class="text-xs text-indigo-300/60 uppercase tracking-wider mb-2">赛程安排</p>
+			        <ul class="space-y-1.5 text-sm">
+			          <li>▸ 11月18日之前在群中发送课题曲的总和成绩图，可以在微信公众号里面寻找成绩截图发送，我们将取最后成绩前32名参加正赛，比赛时先进行签名确保人员到场，并有助于发放比赛奖励给予个人</li>
+			          <li>▸ 11月21，22日进行正赛赛事，进行选取16强，8强，4强，冠亚军，选歌为互选一首随机一首，难度随排名相关，32强为12到13之间，16强为13到14之间，8强14到14.7之间，4强随机14.7与.8决赛为随机14.9</li>
+			          <li>
+			            <div class="schedule-toggle flex items-center justify-between cursor-pointer text-indigo-100/90 hover:text-primary transition-colors" onclick="toggleSchedule()">
+			              <span>▸ 正赛结束后设有娱乐赛环节（点击查看详情）</span>
+			              <i class="fa fa-chevron-down transition-transform duration-300" id="schedule-arrow"></i>
+			            </div>
+			            <!-- 娱乐赛详情：默认隐藏，点击展开 -->
+			            <div id="schedule-detail" class="hidden mt-2 pl-4 border-l-2 border-primary/50 text-sm text-indigo-200/80 space-y-1.5">
+			              <p>🎮 娱乐赛项目：带耳机听取随机音频挑战 + 多人组队接力赛等 + 你是我的“眼”——蒙眼比拼等</p>
+			              <p>📋 规则：现场随机抽取曲目，固定难度比拼准确率；1.佩戴耳机听取手机上播放的随机音频进行游玩；2.多人组队接力完成曲目，每个人上场时间不能超过规定时间，总分高者获胜；3.进行蒙眼挑战时不可干扰对手的听取信息，尽可能快的说出铺面信息。</p>
+						  <P>注意：娱乐赛本质是娱乐玩法，娱乐至上，在游玩时不要过于注重成绩，不要与其他人发生言语或肢体冲突，专心享受游玩的乐趣。</P>
+						  <p>娱乐赛的详情欢迎大家积极投稿更多的项目会随时间逐步增加在正式比赛前敲定，然后欢迎投稿以及不要损坏机器。</p>
+			            </div>
+			          </li>
+
+			        </ul>
+			      </div>
+			
+			      <div>
+			        <p class="text-xs text-indigo-300/60 uppercase tracking-wider mb-2">奖项设置</p>
+			        <ul class="space-y-1.5 text-sm">
+			          <li>🥇 冠军：游戏币160枚+一份签绘 </li>
+			          <li>🥈 亚军：游戏币120枚+色纸 </li>
+			          <li>🥉 季军：游戏币80枚+tama猫扇子</li>
+					  <li>赛事第四名：游戏币50枚+猫扇子</li>
+					  <li>赛事八强：游戏币24枚+透扇</li>
+					  <li>赛事十六强：游戏币18枚+贴纸</li>
+			          <li>🎁 参赛即得参与奖8枚游戏币</li>
+			        </ul>
+			      </div>
+			
+			      <div class="bg-white/5 rounded-lg p-3 text-sm">
+			        <p class="text-indigo-200/80">💡 本次活动面向开封市的音游爱好者，通过提交课题曲成绩免费报名参加，机台费用自理。</p>
+			      </div>
+			    </div>
+			
+			    <!-- 底部按钮 -->
+			    <div class="p-4 border-t border-white/10 flex justify-end gap-3">
+			      <button onclick="closeEventModal()" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors">
+			        关闭
+			      </button>
+			    </div>
+			  </div>
+			</div>
+			
+
+				
+			<script>
+			  // 打开活动详情
+			  function openEventModal() {
+			    const modal = document.getElementById('event-modal');
+			    modal.classList.remove('hidden');
+			    modal.classList.add('flex');
+			    document.body.style.overflow = 'hidden';
+			  }
+			
+			  // 关闭活动详情
+			  function closeEventModal() {
+			    const modal = document.getElementById('event-modal');
+			    modal.classList.add('hidden');
+			    modal.classList.remove('flex');
+			    document.body.style.overflow = '';
+			  }
+			
+			  // ESC 同时关闭所有模态框
+			  document.addEventListener('keydown', function (e) {
+			    if (e.key === 'Escape') {
+			      closeEventModal();
+			      closeModal();
+			    }
+			  });
+			  
+			  // 娱乐赛详情展开/收起
+			  function toggleSchedule() {
+			    const detail = document.getElementById('schedule-detail');
+			    const arrow = document.getElementById('schedule-arrow');
+			    detail.classList.toggle('hidden');
+			    arrow.classList.toggle('rotate-180');
+			  }
+			  
+			  /* ========== 新增：游戏卡片区域鼠标滚轮横向滚动 ========== */
+			    const gameScroll = document.getElementById('game-scroll');
+			    gameScroll.addEventListener('wheel', function(e) {
+			      // 只有横向滚动区域内的滚轮事件才触发
+			      if (e.deltaY === 0) return;
+			      e.preventDefault();
+			      // 把上下滚轮的距离，转换成横向滚动距离
+			      gameScroll.scrollLeft += e.deltaY;
+			    });
+
+
+
+			</script>
